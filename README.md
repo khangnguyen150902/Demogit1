@@ -1,93 +1,68 @@
-# node-docker-gitlab-ci
+## Overview
 
+A sample project that demonstrates how a NodeJS REST API can be Dockerized and auto-deployed using GitLab CI/CD. Deployments are handled over SSH.
 
+![Auto Deployment Process](https://taylor.callsen.me/wp-content/uploads/2021/03/GitLab_CI_Deployment_of_Docker_Container-Taylor_Callsen_March_2021.svg)
 
-## Getting started
+## NodeJS REST API
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Install Dependencies
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+Install the dependencies with the following command:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/kane1509/node-docker-gitlab-ci.git
-git branch -M main
-git push -uf origin main
+nvm use
+npm install
 ```
 
-## Integrate with your tools
+### Launch Development Server
 
-- [ ] [Set up project integrations](https://gitlab.com/kane1509/node-docker-gitlab-ci/-/settings/integrations)
+To run a build and launch the development server, execute:
 
-## Collaborate with your team
+`npm start`
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+### Routes
 
-## Test and Deploy
+Once completed, the REST API should be avialable at the following routes:
 
-Use the built-in continuous integration in GitLab.
+#### GET http://localhost:3000/info
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Returns an example JSON response to confirm the API endpoint is accessible.
 
-***
+## Docker
 
-# Editing this README
+This repo is configured with GitLab CI to build and deploy a docker image whenever changes are commited. The Docker image will be tagged with `latest` as well as the version listed in the `package.json`.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### Image Build and Execution
 
-## Suggestions for a good README
+The Image can be built using the standard `docker build` command. The `docker run` command can be used to launch the container, however network information and environment variables will need to be defined. Please see the how `docker run` is executed in the [gitlab-ci.yaml](https://github.com/tcallsen/node-docker-gitlab-ci/blob/master/.gitlab-ci.yml#L39) as an example.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Endpoints
 
-## Name
-Choose a self-explaining name for your project.
+Once deployed into a Docker Runtime, the REST API's endpoints will be available on the local machine via:
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+- {host}:8882/info
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## GitLab Deployment
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+Changes will be deployed automatically to a configured Deployment Server (i.e. server being deployed to). For this to happen, ensure the following CI/CD variables are defined at either the group or project level in GitLab:
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+- `STAGE_SERVER_IP` - contains the IP address of the Deployment Server. This is the IP address used to make SSH connections from the GitLab Runner.
+- `STAGE_SERVER_USER` - contains the user used when opening the SSH session.
+- `STAGE_ID_RSA` - SSH private key file used to authenticate when opening the SSH session.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+For more information on these variables, see [section 2: Preparing the Staging Server](https://taylor.callsen.me/how-to-dockerize-a-nodejs-app-and-deploy-it-using-gitlab-ci/) on this blog post.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+I also ran into issues with DinD (Docker in Docker) during the Docker image builds. Strange things like `cannot connect to the docker daemon`. Ultimate applying this fix to the GitLab Runner worked for me: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1986#note_20339074
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Docker Debugging
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Execute the following command to terminal into the running docker container:
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```
+docker exec -it node-docker-gitlab-ci /bin/sh
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## Supplemental Blog Post
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Here is a blog post I created that explains this project and the CI/CD process in further detail: [https://taylor.callsen.me/how-to-dockerize-a-nodejs-app-and-deploy-it-using-gitlab-ci/](https://taylor.callsen.me/how-to-dockerize-a-nodejs-app-and-deploy-it-using-gitlab-ci/)
